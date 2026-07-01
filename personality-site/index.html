@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EchoCare · 控制台 - 情感陪伴机器人管理</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ========== 侧边栏 ========== -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <circle cx="12" cy="8" r="5"/><path d="M3 21v-2a7 7 0 017-7h4a7 7 0 017 7v2"/>
+    </svg>
+    <div>
+      <span class="brand-name">EchoCare</span>
+      <span class="brand-sub">情感陪伴机器人</span>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-item active" data-page="console">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      控制台
+    </a>
+    <a class="nav-item" data-page="settings">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      系统设置
+    </a>
+    <a class="nav-item" data-page="share">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      分享码
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="backup-actions">
+      <button class="btn btn-sm btn-outline backup-btn" onclick="App.exportBackup()" title="导出备份">📥 导出备份</button>
+      <button class="btn btn-sm btn-outline backup-btn" onclick="App.importBackup()" title="导入备份">📤 导入备份</button>
+    </div>
+    <div class="user-info" id="sidebarUser" style="display:none">
+      <span class="avatar" id="sidebarAvatar"></span>
+      <div class="user-meta">
+        <span id="sidebarUsername"></span>
+        <span class="user-role">开发者</span>
+      </div>
+    </div>
+    <button class="btn btn-sm btn-outline btn-full" id="sidebarLogin" onclick="App.showAuth()">登录 / 注册</button>
+    <button class="btn btn-sm btn-outline btn-full" id="sidebarLogout" style="display:none" onclick="App.logout()">退出登录</button>
+  </div>
+</aside>
+
+<!-- ========== 主内容区 ========== -->
+<main class="main-content">
+
+  <header class="topbar">
+    <h1 class="page-title" id="pageTitle">控制台</h1>
+    <div class="topbar-actions">
+      <button class="btn btn-sm btn-primary" onclick="App.showConfigPanel(null)">+ 创建智能体</button>
+    </div>
+  </header>
+
+  <!-- ====== 控制台 ====== -->
+  <section class="page active" id="page-console">
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-value" id="statAgents">0</div><div class="stat-label">智能体</div></div>
+      <div class="stat-card"><div class="stat-value online" id="statOnline">0</div><div class="stat-label">在线设备</div></div>
+      <div class="stat-card"><div class="stat-value" id="statPersonalities">0</div><div class="stat-label">人格配置</div></div>
+      <div class="stat-card"><div class="stat-value" id="statShares">0</div><div class="stat-label">分享码</div></div>
+    </div>
+    <div class="section-header"><h2>我的智能体</h2></div>
+    <div class="agent-grid" id="agentGrid">
+      <div class="empty-state">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity="0.3"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <h3>暂无智能体</h3><p>点击右上角"创建智能体"开始</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== 系统设置页 ====== -->
+  <section class="page" id="page-settings">
+    <!-- 全局设置 -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><h2>全局默认设置</h2><p>新创建的智能体将默认使用以下配置</p></div>
+      <div class="card-body">
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>默认名称</label>
+            <input type="text" id="gblName" value="echo" maxlength="20" onchange="App.saveGlobalSettings()">
+            <span class="form-hint">修改后所有智能体界面的默认名称即时生效</span>
+          </div>
+          <div class="form-group">
+            <label>固定唤醒词</label>
+            <input type="text" id="gblWakeWord" value="hi echo" readonly>
+            <span class="form-hint" style="color:var(--accent)">系统固定唤醒词，不可修改</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 当前智能体设置 -->
+    <div class="card">
+      <div class="card-header"><h2>智能体配置</h2><p>选择一个智能体进行详细设置</p></div>
+      <div class="card-body">
+        <div class="settings-agent-list" id="settingsAgentList">
+          <div class="empty-state"><p>请先在控制台中创建智能体</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== 分享码 ====== -->
+  <section class="page" id="page-share">
+    <div class="card">
+      <div class="card-header"><h2>导入分享码</h2><p>粘贴其他用户的分享码，一键导入人格配置</p></div>
+      <div class="card-body">
+        <div class="share-import">
+          <input type="text" id="shareCodeInput" placeholder="请输入分享码，例如：67R1iMmKQN" maxlength="20">
+          <button class="btn btn-primary" onclick="App.importShareCode()">导入</button>
+        </div>
+        <span class="form-error" id="shareError"></span>
+      </div>
+    </div>
+    <div class="card" style="margin-top:20px">
+      <div class="card-header"><h2>我的分享码</h2></div>
+      <div class="card-body"><div class="share-list" id="shareList"><div class="empty-state"><p>保存智能体配置后自动生成分享码</p></div></div></div>
+    </div>
+    <div class="card" style="margin-top:20px">
+      <div class="card-header"><h2>社区推荐</h2><p>社区热门的智能体配置</p></div>
+      <div class="card-body"><div class="community-grid" id="communityGrid"></div></div>
+    </div>
+  </section>
+</main>
+
+<!-- ========== 配置面板弹窗 ========== -->
+<div class="panel-overlay" id="configOverlay" style="display:none">
+  <div class="config-panel">
+    <div class="config-panel-header">
+      <div>
+        <h2 id="configPanelTitle">创建智能体</h2>
+        <p>配置你的EchoCare情感陪伴机器人</p>
+      </div>
+      <div class="config-header-actions">
+        <button class="btn btn-sm btn-outline" onclick="App.shareCurrentConfig()" id="btnShareConfig" title="生成分享码">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          分享
+        </button>
+        <button class="modal-close" onclick="App._confirmClosePanel()">&times;</button>
+      </div>
+    </div>
+
+    <div class="config-panel-body">
+      <!-- 基础信息 -->
+      <div class="config-section">
+        <h3 class="config-section-title">基础信息</h3>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>智能体名称 <span class="required">*</span></label>
+            <input type="text" id="cfgAgentName" maxlength="20" onchange="App._onNameChanged()">
+          </div>
+          <div class="form-group">
+            <label>唤醒词</label>
+            <input type="text" id="cfgWakeWord" value="hi echo" readonly>
+            <span class="form-hint" style="color:var(--accent)">系统固定唤醒词</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 性别 + 语言 + 语音 -->
+      <div class="config-section">
+        <h3 class="config-section-title">语音设置</h3>
+        <div class="form-row-3">
+          <div class="form-group">
+            <label>预设性别</label>
+            <div class="gender-toggle" id="genderToggle">
+              <button data-gender="female" class="gender-btn active" onclick="App.setGender('female')">👩 女性</button>
+              <button data-gender="male" class="gender-btn" onclick="App.setGender('male')">👨 男性</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>语言 / 方言</label>
+            <select id="cfgLanguage" onchange="App.setLanguage(this.value)"></select>
+          </div>
+          <div class="form-group">
+            <label>语音角色</label>
+            <select id="cfgVoice"></select>
+          </div>
+        </div>
+        <div class="form-row-3" style="margin-top:12px">
+          <div class="form-group">
+            <label>AI模型</label>
+            <select id="cfgModel">
+              <option value="qwen">通义千问 (Qwen)</option>
+              <option value="deepseek">DeepSeek</option>
+              <option value="gpt">GPT-4o</option>
+            </select>
+          </div>
+          <div></div><div></div>
+        </div>
+      </div>
+
+      <!-- 人格配置（双分支） -->
+      <div class="config-section">
+        <h3 class="config-section-title">人格配置</h3>
+        <div class="persona-tabs">
+          <button class="persona-tab active" data-branch="preset" onclick="App.switchPersonaBranch('preset')">预设模式</button>
+          <button class="persona-tab" data-branch="custom" onclick="App.switchPersonaBranch('custom')">自定义模式</button>
+        </div>
+
+        <!-- 分支A：预设模式选择 -->
+        <div class="persona-branch active" id="branchPreset">
+          <p class="config-hint">选择预设人格模式，可多选。每种模式有独特的语言风格和交互特点。</p>
+          <div class="preset-grid" id="presetGrid"></div>
+          <div id="presetPreview" class="preset-detail-preview" style="display:none">
+            <div class="preset-detail-header">
+              <strong id="presetDetailName"></strong>
+              <button class="btn btn-sm btn-outline" onclick="App.hidePresetDetail()">收起</button>
+            </div>
+            <p id="presetDetailDesc"></p>
+            <div class="preset-detail-chats" id="presetDetailChats"></div>
+          </div>
+        </div>
+
+        <!-- 分支B：自定义提示词 -->
+        <div class="persona-branch" id="branchCustom">
+          <p class="config-hint">直接编写系统提示词，自定义人格描述。使用 <code>{{assistant_name}}</code> 作为名字占位符。</p>
+          <div class="form-group">
+            <textarea id="cfgPrompt" placeholder="定义AI的核心行为与性格...&#10;&#10;我是{{assistant_name}}，..."></textarea>
+            <div class="prompt-toolbar">
+              <span class="char-counter"><span id="cfgCharCount">0</span> / 3000</span>
+              <div class="prompt-toolbar-actions">
+                <button class="btn btn-sm btn-icon" onclick="App.insertTemplate()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                  插入模板
+                </button>
+                <button class="btn btn-sm btn-accent" onclick="App.polishPrompt()" id="btnPolish">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                  帮忙润色
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- 润色建议面板 -->
+          <div class="polish-panel" id="polishPanel" style="display:none">
+            <div class="polish-header">
+              <strong>✨ 润色分析</strong>
+              <button class="modal-close" onclick="App.hidePolish()">&times;</button>
+            </div>
+            <div class="polish-body" id="polishBody"></div>
+            <div class="polish-footer">
+              <button class="btn btn-sm btn-outline" onclick="App.hidePolish()">保留原版</button>
+              <button class="btn btn-sm btn-primary" onclick="App.applyPolish()">一键应用润色</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 实时预览 -->
+      <div class="config-section">
+        <label class="checkbox-label">
+          <input type="checkbox" id="cfgPreviewToggle" checked>
+          <span class="checkmark"></span>
+          实时预览人格效果
+        </label>
+      </div>
+
+      <div class="config-preview" id="configPreview">
+        <div class="preview-header">人格预览</div>
+        <div class="preview-body" id="configPreviewBody">
+          <em style="color:var(--text-muted)">选择预设模式或输入自定义提示词后自动预览...</em>
+        </div>
+      </div>
+    </div>
+
+    <div class="config-panel-footer">
+      <input type="hidden" id="cfgAgentId">
+      <input type="hidden" id="cfgGender" value="female">
+      <input type="hidden" id="cfgBranch" value="preset">
+      <input type="hidden" id="cfgPresets" value="">
+      <button class="btn btn-outline" onclick="App._confirmClosePanel()">取消</button>
+      <button class="btn btn-outline" id="btnSaveDraftConfig" onclick="App.saveDraftConfig()">保存草稿</button>
+      <button class="btn btn-primary" id="btnSaveConfig" onclick="App.saveConfig()">
+        <span class="btn-text">保存配置</span><span class="btn-spinner" style="display:none"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 二次确认弹窗 ========== -->
+<div class="modal-overlay" id="confirmModal" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-header"><h3 id="confirmTitle">确认操作</h3><button class="modal-close" onclick="App.dismissConfirm()">&times;</button></div>
+    <div class="modal-body">
+      <p id="confirmMsg"></p>
+      <div class="confirm-actions">
+        <button class="btn btn-outline btn-full" onclick="App.dismissConfirm()">取消</button>
+        <button class="btn btn-primary btn-full" id="confirmOk" onclick="App.execConfirm()">确认</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 认证弹窗 ========== -->
+<div class="modal-overlay" id="authModal" style="display:none">
+  <div class="modal">
+    <div class="modal-header"><h3 id="authModalTitle">登录</h3><button class="modal-close" onclick="App.closeAuth()">&times;</button></div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login">登录</button>
+      <button class="auth-tab" data-tab="register">注册</button>
+    </div>
+    <form class="auth-form active" id="loginForm">
+      <div class="form-group"><label>邮箱 / 用户名</label><input type="text" id="loginEmail" placeholder="请输入" autocomplete="username"><span class="form-error" id="loginEmailError"></span></div>
+      <div class="form-group"><label>密码</label><div class="input-wrapper"><input type="password" id="loginPassword" placeholder="请输入密码" autocomplete="current-password"><button type="button" class="toggle-pwd" id="togglePwd" aria-label="显示密码"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="eyeOff"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="eyeOn" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button></div><span class="form-error" id="loginPasswordError"></span></div>
+      <div class="form-row"><label class="checkbox-label"><input type="checkbox" id="rememberMe"><span class="checkmark"></span>记住我</label><a href="#" class="forgot-link" onclick="event.preventDefault();App.showForgotPwd()">忘记密码？</a></div>
+      <button type="submit" class="btn btn-primary btn-full" id="loginBtn"><span class="btn-text">登 录</span><span class="btn-spinner" style="display:none"></span></button>
+      <span class="form-error form-error-center" id="loginFormError"></span>
+    </form>
+    <form class="auth-form" id="registerForm">
+      <div class="form-group"><label>用户名</label><input type="text" id="regUsername" placeholder="设置用户名"><span class="form-error" id="regUsernameError"></span></div>
+      <div class="form-group"><label>邮箱</label><input type="email" id="regEmail" placeholder="请输入邮箱"><span class="form-error" id="regEmailError"></span></div>
+      <div class="form-group"><label>密码</label><input type="password" id="regPassword" placeholder="至少6位"><span class="form-error" id="regPasswordError"></span></div>
+      <div class="form-group"><label>确认密码</label><input type="password" id="regConfirm" placeholder="再次输入"><span class="form-error" id="regConfirmError"></span></div>
+      <button type="submit" class="btn btn-primary btn-full" id="registerBtn"><span class="btn-text">注 册</span><span class="btn-spinner" style="display:none"></span></button>
+      <span class="form-error form-error-center" id="registerFormError"></span>
+    </form>
+  </div>
+</div>
+
+<!-- ========== 忘记密码 ========== -->
+<div class="modal-overlay" id="forgotModal" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-header"><h3>重置密码</h3><button class="modal-close" onclick="App.closeForgotPwd()">&times;</button></div>
+    <div class="modal-body">
+      <p>输入注册邮箱，我们将发送重置链接。</p>
+      <div class="form-group"><label>邮箱</label><input type="email" id="forgotEmail" placeholder="请输入邮箱"><span class="form-error" id="forgotEmailError"></span></div>
+      <button class="btn btn-primary btn-full" onclick="App.sendReset()">发送重置链接</button>
+      <span class="form-error form-error-center" id="forgotFormError"></span>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

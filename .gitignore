@@ -1,0 +1,39 @@
+# ESP-IDF 编译产物
+build/
+sdkconfig
+sdkconfig.old
+*.pyc
+__pycache__/
+managed_components/
+dependencies.lock
+
+# IDE / 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
+Desktop.ini
+
+# Node / 前端 (仅保留源码，不提交运行时)
+node_modules/
+dist/
+
+# 固件二进制
+*.bin
+*.elf
+*.map
+*.hex
+partitions_*.bin
+bootloader/
+ota_data_initial.bin
+flash_args
+flasher_args.json
+
+# 敏感文件
+.env
+*.pem
+*.key
