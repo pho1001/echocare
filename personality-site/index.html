@@ -32,6 +32,20 @@
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
       分享码
     </a>
+    <div class="device-status" id="deviceStatus" style="display:none">
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-card);border-radius:8px;margin:4px 0">
+        <div style="width:10px;height:10px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite" id="deviceDot"></div>
+        <div style="font-size:12px">
+          <div style="color:var(--text-primary);font-weight:600" id="deviceName">设备已连接</div>
+          <div style="color:var(--text-tertiary);font-size:11px" id="deviceIp">192.168.1.100</div>
+        </div>
+        <button onclick="Esp32Api.disconnect();location.reload()" style="margin-left:auto;background:none;border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:11px;padding:2px 6px;color:var(--text-tertiary)">断开</button>
+      </div>
+    </div>
+    <a class="nav-item" style="color:var(--accent2)" href="gpio-beginner.html" target="_blank">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 00-8.49-8.49L10 2.7a6.005 6.005 0 00-.61 7.89"/><path d="M9.3 17.7a1 1 0 000-1.4l-1.6-1.6a1 1 0 00-1.4 0L2.53 18.47a6 6 0 008.49 8.49L14 21.3a6.005 6.005 0 00.61-7.89"/></svg>
+      硬件改装
+    </a>
   </nav>
   <div class="sidebar-footer">
     <div class="backup-actions">
@@ -342,6 +356,7 @@
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<script src="js/esp32-api.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

@@ -1044,7 +1044,15 @@ const App = {
       this._renderAgents();
       this._renderShares();
       this._updateGlobalSettings(); // 同步全局名称
-      Toast.show('智能体配置已保存！', 'success');
+
+      // 如果连接了 ESP32 设备，同步配置到硬件
+      if (Esp32Api.isConnected()) {
+        Esp32Api.saveConfig(data).then(ok => {
+          if (ok) Toast.show('智能体配置已保存到设备！', 'success');
+        });
+      } else {
+        Toast.show('智能体配置已保存！', 'success');
+      }
     }, 400);
   },
 

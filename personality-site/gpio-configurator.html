@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moji 2.0 硬件改装配置器</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0f0f14;--panel:#1a1a24;--border:#2a2a3a;--text:#e0e0e0;
+  --accent:#6366f1;--accent2:#22c55e;--danger:#ef4444;--warn:#f59e0b;
+  --used:#ef4444;--free:#22c55e;--selected:#6366f1;--gpio-bg:#1e1e2e;
+}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+.header{background:var(--panel);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:16px}
+.header h1{font-size:1.2rem;font-weight:600}
+.badge{font-size:0.7rem;padding:3px 8px;border-radius:10px;background:var(--accent);color:#fff}
+.layout{display:grid;grid-template-columns:320px 1fr 320px;gap:0;min-height:calc(100vh - 52px)}
+.panel{padding:16px;border-right:1px solid var(--border);overflow-y:auto;max-height:calc(100vh - 52px)}
+.panel-right{border-right:none;border-left:1px solid var(--border)}
+.panel h2{font-size:0.9rem;font-weight:600;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px}
+.panel h2 .icon{font-size:1.1rem}
+
+/* GPIO 网格 */
+.gpio-legend{display:flex;gap:16px;margin-bottom:12px;font-size:0.7rem}
+.gpio-legend span{display:flex;align-items:center;gap:4px}
+.gpio-legend .dot{width:8px;height:8px;border-radius:50%}
+.gpio-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.gpio-cell{background:var(--gpio-bg);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center;cursor:pointer;transition:all 0.15s;position:relative;min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.gpio-cell:hover{border-color:var(--accent);transform:translateY(-1px)}
+.gpio-cell.used{background:#2a1515;border-color:var(--used);opacity:0.7}
+.gpio-cell.free{border-color:var(--free)}
+.gpio-cell.selected{background:#1a1a3a;border-color:var(--accent);box-shadow:0 0 12px rgba(99,102,241,0.3)}
+.gpio-cell .pin-num{font-size:1.1rem;font-weight:700;font-family:monospace}
+.gpio-cell .pin-label{font-size:0.6rem;margin-top:2px;color:#888;line-height:1.2}
+.gpio-cell .pin-mod{font-size:0.6rem;margin-top:2px;padding:1px 5px;border-radius:3px;background:var(--accent);color:#fff;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gpio-cell.used .pin-mod{background:var(--used)}
+
+/* 模块库 */
+.module-list{display:flex;flex-direction:column;gap:8px}
+.module-card{background:var(--gpio-bg);border:1px solid var(--border);border-radius:8px;padding:10px;cursor:grab;transition:all 0.15s;display:flex;align-items:center;gap:10px}
+.module-card:hover{border-color:var(--accent)}
+.module-card.selected-mod{background:#1a1a3a;border-color:var(--accent)}
+.module-card .mod-icon{font-size:1.4rem;flex-shrink:0;width:32px;text-align:center}
+.module-card .mod-info{flex:1;min-width:0}
+.module-card .mod-name{font-size:0.8rem;font-weight:600}
+.module-card .mod-pins{font-size:0.65rem;color:#888}
+.module-card .mod-tags{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.module-card .tag{font-size:0.6rem;padding:1px 6px;border-radius:4px;background:#2a2a3a;color:#aaa}
+.module-card .remove-btn{display:none;background:none;border:none;color:var(--danger);cursor:pointer;font-size:1rem;padding:4px}
+.module-card.assigned .remove-btn{display:block}
+
+/* 右侧面板 */
+.code-block{background:#0a0a0f;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:'Consolas','Courier New',monospace;font-size:0.7rem;line-height:1.5;overflow-x:auto;white-space:pre;color:#a0d0a0;max-height:300px;overflow-y:auto}
+.guide-item{background:var(--gpio-bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;font-size:0.75rem}
+.guide-item .guide-title{font-weight:600;display:flex;align-items:center;gap:6px}
+.guide-item .guide-detail{color:#888;margin-top:4px;font-size:0.7rem}
+.bom-table{width:100%;font-size:0.7rem;border-collapse:collapse}
+.bom-table th,.bom-table td{padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)}
+.bom-table th{color:#888;font-weight:500}
+.bom-table .price{color:var(--accent2)}
+
+.btn{background:var(--accent);color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:0.8rem;font-weight:500;transition:all 0.15s}
+.btn:hover{opacity:0.9}
+.btn-sm{padding:4px 10px;font-size:0.7rem}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-outline:hover{border-color:var(--accent)}
+.btn-danger{background:var(--danger)}
+.btn-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+
+.empty-state{text-align:center;padding:24px;color:#666;font-size:0.75rem}
+.empty-state .big{font-size:2rem;margin-bottom:8px}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:100}
+.modal{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:480px;width:90%}
+.modal h3{margin-bottom:12px}
+.modal .form-group{margin-bottom:12px}
+.modal label{display:block;font-size:0.75rem;color:#888;margin-bottom:4px}
+.modal input,.modal select{width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem}
+.modal .pin-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;max-height:150px;overflow-y:auto}
+.modal .pin-grid button{padding:6px;font-size:0.7rem;border-radius:4px;border:1px solid var(--border);background:var(--gpio-bg);color:var(--text);cursor:pointer}
+.modal .pin-grid button:hover{background:var(--accent);color:#fff}
+.modal .pin-grid button.taken{opacity:0.3;cursor:not-allowed}
+.modal .btn-row{justify-content:flex-end}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;padding:10px 24px;border-radius:8px;font-size:0.8rem;z-index:200;animation:fadeIn 0.2s;pointer-events:none}
+@keyframes fadeIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+.sidebar-link{display:block;padding:8px 16px;color:var(--text);text-decoration:none;font-size:0.8rem;border-radius:6px;transition:all 0.15s;margin-bottom:4px}
+.sidebar-link:hover{background:var(--gpio-bg);color:var(--accent)}
+.sidebar-link.active{background:var(--accent);color:#fff}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🔧 Moji 2.0 硬件改装配置器</h1>
+  <span class="badge">ESP32-C5</span>
+  <span class="badge" style="background:var(--accent2)">虚拟仿真</span>
+  <div style="flex:1"></div>
+  <button class="btn btn-sm" onclick="toggleHelp()">❓ 使用帮助</button>
+  <button class="btn btn-sm btn-outline" onclick="resetAll()">🔄 恢复默认</button>
+  <button class="btn btn-sm" onclick="exportConfig()">📋 导出配置</button>
+  <button class="btn btn-sm btn-outline" onclick="importConfig()">📤 导入配置</button>
+  <a href="index.html" style="color:var(--accent);text-decoration:none;font-size:0.8rem">← 回控制台</a>
+</div>
+
+<div id="helpPanel" style="background:#1a1a3a;border-bottom:1px solid var(--accent);padding:16px 24px;">
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+    <div style="text-align:center">
+      <div style="font-size:1.5rem;margin-bottom:4px">1️⃣</div>
+      <div style="font-weight:600;font-size:0.85rem">选模块</div>
+      <div style="font-size:0.7rem;color:#888;margin-top:4px">在左侧"外设模块库"<br>点击你想加的功能</div>
+    </div>
+    <div style="text-align:center">
+      <div style="font-size:1.5rem;margin-bottom:4px">2️⃣</div>
+      <div style="font-weight:600;font-size:0.85rem">点绿块</div>
+      <div style="font-size:0.7rem;color:#888;margin-top:4px">在中间找到<b style="color:var(--free)">绿色方块</b><br>点一下完成接线</div>
+    </div>
+    <div style="text-align:center">
+      <div style="font-size:1.5rem;margin-bottom:4px">3️⃣</div>
+      <div style="font-weight:600;font-size:0.85rem">看结果</div>
+      <div style="font-size:0.7rem;color:#888;margin-top:4px">右侧自动显示：<br>代码 / 买什么 / 焊哪里</div>
+    </div>
+    <div style="text-align:center">
+      <div style="font-size:1.5rem;margin-bottom:4px">4️⃣</div>
+      <div style="font-weight:600;font-size:0.85rem">导出方案</div>
+      <div style="font-size:0.7rem;color:#888;margin-top:4px">满意后点"导出配置"<br>保存给工程师看</div>
+    </div>
+  </div>
+  <p style="margin-top:10px;font-size:0.7rem;color:#666;text-align:center">
+    🔴 <b>红色 = 已被屏幕/音频/按键占用，不能动</b> &nbsp;|&nbsp;
+    🟢 <b>绿色 = 空闲可用，可以接新东西</b> &nbsp;|&nbsp;
+    🔵 <b>蓝色 = 你刚加装上去的</b>
+  </p>
+</div>
+
+<div class="layout">
+  <!-- 左: 外设模块库 -->
+  <div class="panel">
+    <h2><span class="icon">📦</span> 外设模块库</h2>
+    <div class="module-list" id="moduleLib"></div>
+    <p style="font-size:0.65rem;color:#666;margin-top:12px">💡 选中模块 → 点击右侧空闲引脚即可加装</p>
+  </div>
+
+  <!-- 中: GPIO 引脚图 -->
+  <div class="panel" style="border-right:none">
+    <h2><span class="icon">🗺️</span> GPIO 引脚分布图 <span style="font-size:0.65rem;color:#666;font-weight:400">（ESP32-C5 QFN48）</span></h2>
+    <div class="gpio-legend">
+      <span><span class="dot" style="background:var(--used)"></span> 已占用 ({{usedCount}})</span>
+      <span><span class="dot" style="background:var(--free)"></span> 空闲可用 ({{freeCount}})</span>
+      <span><span class="dot" style="background:var(--selected)"></span> 新加装</span>
+    </div>
+    <div class="gpio-grid" id="gpioGrid"></div>
+    <p style="text-align:center;color:#666;font-size:0.65rem;margin-top:12px">
+      ⚠ 部分 GPIO 可能未在 PCB 上引出，实际改装前请用万用表确认
+    </p>
+  </div>
+
+  <!-- 右: 代码/BOM/指南 -->
+  <div class="panel panel-right">
+    <h2><span class="icon">📄</span> 自动生成 config.h</h2>
+    <div class="code-block" id="codeOutput">// 点击引脚分配模块后，此处自动生成固件代码</div>
+    <div class="btn-row">
+      <button class="btn btn-sm btn-outline" onclick="copyCode()">📋 复制代码</button>
+      <button class="btn btn-sm btn-outline" onclick="downloadConfig()">💾 下载 .h 文件</button>
+    </div>
+
+    <h2 style="margin-top:16px"><span class="icon">🛒</span> 物料清单 (BOM)</h2>
+    <div id="bomList"><div class="empty-state">暂未加装模块</div></div>
+
+    <h2 style="margin-top:16px"><span class="icon">🔌</span> 接线指南</h2>
+    <div id="wiringGuide"><div class="empty-state">暂未加装模块</div></div>
+  </div>
+</div>
+
+<!-- 引脚分配弹窗 -->
+<div class="modal-overlay" id="pinModal" style="display:none">
+  <div class="modal">
+    <h3 id="pinModalTitle">选择引脚</h3>
+    <p style="font-size:0.75rem;color:#888;margin-bottom:12px" id="pinModalDesc"></p>
+    <div id="pinModalGrid" class="pin-grid"></div>
+    <div class="btn-row" style="margin-top:16px">
+      <button class="btn btn-sm btn-outline" onclick="closePinModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" style="display:none"></div>
+
+<script>
+// ======================== 数据 ========================
+const GPIO_COUNT = 29; // 0-28
+
+// Moji 2.0 默认引脚占用
+const DEFAULT_PINS = {
+  0:  { label:'QSPI SCLK',     group:'display', locked:true },
+  1:  { label:'QSPI RESET',    group:'display', locked:true },
+  2:  { label:'背光 PWM',      group:'display', locked:true },
+  3:  { label:'QSPI CS',       group:'display', locked:true },
+  5:  { label:'功放 PA',       group:'audio',   locked:true },
+  6:  { label:'QSPI D3',       group:'display', locked:true },
+  7:  { label:'QSPI D2',       group:'display', locked:true },
+  8:  { label:'QSPI D1',       group:'display', locked:true },
+  9:  { label:'QSPI D0',       group:'display', locked:true },
+  10: { label:'LED',           group:'led',     locked:true },
+  11: { label:'I2S BCLK',      group:'audio',   locked:true },
+  12: { label:'I2S DIN (麦克风)',group:'audio', locked:true },
+  23: { label:'I2S DOUT (喇叭)',group:'audio',  locked:true },
+  24: { label:'I2S WS',        group:'audio',   locked:true },
+  25: { label:'I2S MCLK',      group:'audio',   locked:true },
+  26: { label:'I2C SDA',       group:'audio',   locked:true },
+  27: { label:'I2C SCL',       group:'audio',   locked:true },
+  28: { label:'BOOT 按键',     group:'button',  locked:true },
+};
+
+// ESP32-C5 可用 GPIO（QFN48封装），排除默认占用的即空闲
+const ALL_GPIO = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28];
+// 实际未在PCB引出的引脚（需标注）
+const UNBROKEN = {}; // 暂时假设全部引出，板子实际可能部分未引出
+
+// 可加装模块库
+const MODULES = [
+  { id:'servo', icon:'⚙️', name:'舵机 (SG90)', desc:'小角度旋转，可做点头/转头', pins:1, tags:['运动','PWM'], type:'pwm', bom:{name:'SG90 9g舵机', price:'￥5', link:'https://s.click.taobao.com/xxx'} },
+  { id:'servo2', icon:'⚙️⚙️', name:'双舵机套件', desc:'两个舵机，实现二自由度云台', pins:2, tags:['运动','PWM'], type:'pwm', bom:{name:'SG90 ×2 + 云台支架', price:'￥18', link:'https://s.click.taobao.com/xxx'} },
+  { id:'stepper', icon:'🔄', name:'步进电机 (28BYJ-48)', desc:'精确旋转，可做机器人关节', pins:4, tags:['运动','GPIO'], type:'gpio', bom:{name:'28BYJ-48 + ULN2003驱动板', price:'￥10', link:'https://s.click.taobao.com/xxx'} },
+  { id:'dcmotor', icon:'🏎️', name:'直流电机 + 驱动', desc:'持续转动，用于轮式移动', pins:2, tags:['运动','PWM/GPIO'], type:'pwm', bom:{name:'N20减速电机 + L9110S驱动', price:'￥15', link:'https://s.click.taobao.com/xxx'} },
+  { id:'ledstrip', icon:'💡', name:'RGB灯带 (WS2812)', desc:'可编程彩灯，情绪氛围灯', pins:1, tags:['灯光','GPIO'], type:'gpio', bom:{name:'WS2812B 8灯环', price:'￥6', link:'https://s.click.taobao.com/xxx'} },
+  { id:'touch', icon:'👆', name:'触摸传感器 (TTP223)', desc:'电容触摸，可做抚摸感应', pins:1, tags:['交互','GPIO'], type:'gpio', bom:{name:'TTP223 电容触摸模块', price:'￥1.5', link:'https://s.click.taobao.com/xxx'} },
+  { id:'button_extra', icon:'🔘', name:'额外按键', desc:'第二个物理按键，切换模式用', pins:1, tags:['交互','GPIO'], type:'gpio', bom:{name:'6×6 微动开关 + 键帽', price:'￥1', link:'https://s.click.taobao.com/xxx'} },
+  { id:'imu', icon:'🧭', name:'IMU姿态传感器 (MPU6050)', desc:'检测倾斜/摇晃，感知被拿起', pins:2, tags:['传感','I2C'], type:'i2c', bom:{name:'MPU6050 模块 (GY-521)', price:'￥5', link:'https://s.click.taobao.com/xxx'} },
+  { id:'dist', icon:'📏', name:'超声波测距 (HC-SR04)', desc:'检测前方距离，障碍感知', pins:2, tags:['传感','GPIO'], type:'gpio', bom:{name:'HC-SR04 超声波模块', price:'￥3', link:'https://s.click.taobao.com/xxx'} },
+  { id:'oled_ext', icon:'📺', name:'副屏 OLED (0.91寸)', desc:'第二块小屏幕，显示额外信息', pins:2, tags:['显示','I2C'], type:'i2c', bom:{name:'0.91寸 OLED (SSD1306)', price:'￥12', link:'https://s.click.taobao.com/xxx'} },
+  { id:'speaker_amp', icon:'🔊', name:'功放模块 + 大喇叭', desc:'外接更大喇叭，声音洪亮', pins:1, tags:['音频','GPIO'], type:'gpio', bom:{name:'MAX98357 I2S 功放 + 喇叭', price:'￥15', link:'https://s.click.taobao.com/xxx'} },
+  { id:'battery_ext', icon:'🔋', name:'外接大电池', desc:'增加续航，预留电池接口', pins:0, tags:['电源','无引脚'], type:'power', bom:{name:'18650 锂电池 + TP4056 充电板', price:'￥12', link:'https://s.click.taobao.com/xxx'} },
+];
+
+// 状态
+let pinAssignments = JSON.parse(JSON.stringify(Object.fromEntries(
+  Object.entries(DEFAULT_PINS).map(([k,v]) => [parseInt(k), {...v}])
+)));
+let currentModule = null;
+let selectedPins = [];
+
+// ======================== 渲染 ========================
+function getFreePins() {
+  const used = new Set(Object.keys(pinAssignments).map(Number));
+  return ALL_GPIO.filter(p => !used.has(p));
+}
+
+function renderAll() {
+  const free = getFreePins();
+  const legend = document.querySelector('.gpio-legend');
+  legend.innerHTML = `
+    <span><span class="dot" style="background:var(--used)"></span> 已占用 (${Object.keys(pinAssignments).length})</span>
+    <span><span class="dot" style="background:var(--free)"></span> 空闲可用 (${free.length})</span>
+    <span><span class="dot" style="background:var(--selected)"></span> 新加装</span>
+  `;
+  renderGpioGrid();
+  renderModuleLib();
+  renderCode();
+  renderBom();
+  renderWiring();
+}
+
+function isNewAssignment(pin) {
+  return pinAssignments[pin] && !pinAssignments[pin].locked;
+}
+
+function renderGpioGrid() {
+  const grid = document.getElementById('gpioGrid');
+  grid.innerHTML = ALL_GPIO.map(pin => {
+    const a = pinAssignments[pin];
+    const isNew = isNewAssignment(pin);
+    let cls = 'gpio-cell';
+    if (a && !isNew) cls += ' used';
+    else if (isNew) cls += ' selected';
+    else cls += ' free';
+    
+    return `<div class="${cls}" onclick="onGpioClick(${pin})" title="GPIO ${pin}${a ? ': ' + a.label : ' (空闲)'}">
+      <span class="pin-num">${pin}</span>
+      <span class="pin-label">${a ? a.label : '空闲'}</span>
+      ${isNew ? `<span class="pin-mod">🔧 加装</span>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderModuleLib() {
+  const lib = document.getElementById('moduleLib');
+  // 检查哪些模块已被分配
+  const assignedMods = new Set();
+  Object.values(pinAssignments).forEach(a => { if (a.moduleId) assignedMods.add(a.moduleId); });
+  
+  lib.innerHTML = MODULES.map(m => {
+    const assigned = assignedMods.has(m.id);
+    return `<div class="module-card ${currentModule === m.id ? 'selected-mod' : ''} ${assigned ? 'assigned' : ''}" 
+      onclick="selectModule('${m.id}')" title="点击选择，再点击引脚分配">
+      <span class="mod-icon">${m.icon}</span>
+      <div class="mod-info">
+        <div class="mod-name">${m.name}</div>
+        <div class="mod-pins">需 ${m.pins} 个引脚 · ${m.type.toUpperCase()}</div>
+        <div class="mod-tags">${m.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+      </div>
+      ${assigned ? `<button class="remove-btn" onclick="event.stopPropagation();removeModule('${m.id}')" title="移除">✕</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function selectModule(id) {
+  if (currentModule === id) { currentModule = null; }
+  else { currentModule = id; }
+  renderAll();
+}
+
+function removeModule(id) {
+  const toRemove = [];
+  Object.entries(pinAssignments).forEach(([pin, a]) => {
+    if (a.moduleId === id) toRemove.push(parseInt(pin));
+  });
+  toRemove.forEach(p => delete pinAssignments[p]);
+  if (currentModule === id) currentModule = null;
+  renderAll();
+  toast(`已移除 ${MODULES.find(m => m.id === id)?.name || id}`);
+}
+
+function onGpioClick(pin) {
+  const a = pinAssignments[pin];
+  // 已有锁定的分配 → 不能改
+  if (a && a.locked) { toast('⚠ 此引脚已被系统占用，不可修改', 'warn'); return; }
+  // 有加装则移除
+  if (a && !a.locked) {
+    const modId = a.moduleId;
+    delete pinAssignments[pin];
+    // 同时移除同模块的其他引脚
+    const toRemove = [];
+    Object.entries(pinAssignments).forEach(([p, aa]) => {
+      if (aa.moduleId === modId) toRemove.push(parseInt(p));
+    });
+    toRemove.forEach(p => { if (p !== pin) delete pinAssignments[p]; });
+    renderAll();
+    toast(`已移除引脚 GPIO ${pin} 的加装`);
+    return;
+  }
+  // 空闲引脚 → 分配当前选中模块
+  if (!currentModule) { toast('请先在左侧选择一个模块', 'warn'); return; }
+  const mod = MODULES.find(m => m.id === currentModule);
+  if (!mod) return;
+  
+  // 检查该模块是否已分配引脚
+  const existingPins = [];
+  Object.entries(pinAssignments).forEach(([p, aa]) => {
+    if (aa.moduleId === currentModule) existingPins.push(parseInt(p));
+  });
+  
+  if (existingPins.length >= mod.pins) {
+    // 已满 → 替换最后一个
+    const oldPin = existingPins[existingPins.length - 1];
+    delete pinAssignments[oldPin];
+  }
+  
+  // I2C 设备需要连续两个引脚
+  if (mod.type === 'i2c' && mod.pins === 2) {
+    const free = getFreePins().filter(p => p !== pin);
+    if (free.length < 1) { toast('⚠ 需要 2 个空闲引脚（SDA + SCL），但空闲不足', 'warn'); return; }
+    const scl = free[0];
+    pinAssignments[pin] = { label:`${mod.name} (SDA)`, group:'addon', moduleId:mod.id, locked:false };
+    pinAssignments[scl] = { label:`${mod.name} (SCL)`, group:'addon', moduleId:mod.id, locked:false };
+    toast(`✅ ${mod.name} 已分配到 GPIO ${pin}(SDA) + GPIO ${scl}(SCL)`);
+  } else {
+    pinAssignments[pin] = { label:mod.name, group:'addon', moduleId:mod.id, locked:false };
+    toast(`✅ ${mod.name} 已分配到 GPIO ${pin}`);
+  }
+  renderAll();
+}
+
+// 生成代码
+function renderCode() {
+  const customPins = Object.entries(pinAssignments).filter(([_,a]) => !a.locked);
+  if (!customPins.length) {
+    document.getElementById('codeOutput').textContent = '// 点击左侧模块 → 点击上方空闲引脚即可\n// 此处自动生成 config.h 追加代码';
+    return;
+  }
+  let code = `// ========== 自动生成的硬件改装代码 ==========\n`;
+  code += `// 基于 Moji 2.0 (ESP32-C5) 默认配置\n`;
+  code += `// 生成时间: ${new Date().toLocaleString()}\n\n`;
+  
+  // 按模块分组
+  const byMod = {};
+  customPins.forEach(([pin, a]) => {
+    if (!byMod[a.moduleId]) byMod[a.moduleId] = [];
+    byMod[a.moduleId].push({pin: parseInt(pin), label: a.label});
+  });
+  
+  Object.entries(byMod).forEach(([modId, pins]) => {
+    const mod = MODULES.find(m => m.id === modId);
+    if (!mod) return;
+    code += `/* ${mod.name} */\n`;
+    pins.forEach(p => {
+      if (mod.type === 'i2c') {
+        if (p.label.includes('SDA')) {
+          code += `#define ${modId.toUpperCase()}_I2C_SDA_PIN    GPIO_NUM_${p.pin}\n`;
+        } else {
+          code += `#define ${modId.toUpperCase()}_I2C_SCL_PIN    GPIO_NUM_${p.pin}\n`;
+        }
+      } else if (mod.type === 'pwm') {
+        code += `#define ${modId.toUpperCase()}_${pins.length > 1 ? `PIN_${pins.indexOf(p)+1}` : 'PWM_PIN'}    GPIO_NUM_${p.pin}\n`;
+      } else {
+        code += `#define ${modId.toUpperCase()}_PIN    GPIO_NUM_${p.pin}\n`;
+      }
+    });
+    code += `\n`;
+  });
+  
+  code += `/* 将以上代码复制到 movecall-moji2-esp32c5/config.h 的 #endif 之前 */\n`;
+  code += `/* 编译前请先 idf.py set-target esp32c5 */`;
+  document.getElementById('codeOutput').textContent = code;
+}
+
+function renderBom() {
+  const customPins = Object.entries(pinAssignments).filter(([_,a]) => !a.locked);
+  if (!customPins.length) {
+    document.getElementById('bomList').innerHTML = '<div class="empty-state">暂未加装模块</div>';
+    return;
+  }
+  const addedMods = new Set(customPins.map(([_,a]) => a.moduleId));
+  let total = 0;
+  let html = `<table class="bom-table"><tr><th>物料</th><th>数量</th><th>约价</th></tr>`;
+  addedMods.forEach(id => {
+    const m = MODULES.find(x => x.id === id);
+    if (m?.bom) {
+      html += `<tr><td>${m.bom.name}</td><td>×1</td><td class="price">${m.bom.price}</td></tr>`;
+    }
+  });
+  html += `</table>`;
+  html += `<p style="font-size:0.65rem;color:#666;margin-top:8px">以上为基础改装 BOM，实际购买请自行搜索</p>`;
+  document.getElementById('bomList').innerHTML = html;
+}
+
+function renderWiring() {
+  const customPins = Object.entries(pinAssignments).filter(([_,a]) => !a.locked);
+  if (!customPins.length) {
+    document.getElementById('wiringGuide').innerHTML = '<div class="empty-state">暂未加装模块</div>';
+    return;
+  }
+  const byMod = {};
+  customPins.forEach(([pin, a]) => {
+    if (!byMod[a.moduleId]) byMod[a.moduleId] = [];
+    byMod[a.moduleId].push({pin: parseInt(pin), label: a.label});
+  });
+  
+  let html = '';
+  Object.entries(byMod).forEach(([modId, pins]) => {
+    const mod = MODULES.find(m => m.id === modId);
+    if (!mod) return;
+    let wiring = '';
+    if (mod.type === 'i2c' && pins.length === 2) {
+      const sda = pins.find(p => p.label.includes('SDA'));
+      const scl = pins.find(p => p.label.includes('SCL'));
+      wiring = `${mod.name} VCC→3.3V | GND→GND | SDA→GPIO ${sda?.pin || '?'} | SCL→GPIO ${scl?.pin || '?'}`;
+    } else if (mod.pins === 1) {
+      wiring = `${mod.name} VCC→3.3V | GND→GND | 信号→GPIO ${pins[0]?.pin}`;
+    } else if (mod.id === 'servo2') {
+      wiring = `${mod.name} 舵机A→GPIO ${pins[0]?.pin} | 舵机B→GPIO ${pins[1]?.pin} | 均接 5V/GND`;
+    } else if (mod.id === 'stepper') {
+      wiring = `${mod.name} IN1→GPIO ${pins[0]?.pin} | IN2→GPIO ${pins[1]?.pin} | IN3→GPIO ${pins[2]?.pin} | IN4→GPIO ${pins[3]?.pin}`;
+    } else if (mod.id === 'dcmotor') {
+      wiring = `${mod.name} INA→GPIO ${pins[0]?.pin} | INB→GPIO ${pins[1]?.pin} | VCC→5V`;
+    } else {
+      wiring = `${mod.name} ${pins.map(p => `GPIO ${p.pin}`).join(' | ')}`;
+    }
+    html += `<div class="guide-item"><div class="guide-title">${mod.icon} ${mod.name}</div><div class="guide-detail">🔌 ${wiring}<br>${mod.bom ? '🛒 ' + mod.bom.name : ''}</div></div>`;
+  });
+  html += `<p style="font-size:0.6rem;color:#888;margin-top:8px">⚠ 焊接前请确认引脚实际引出，建议先用杜邦线测试</p>`;
+  document.getElementById('wiringGuide').innerHTML = html;
+}
+
+// ======================== 操作 ========================
+let helpVisible = true;
+function toggleHelp() {
+  helpVisible = !helpVisible;
+  document.getElementById('helpPanel').style.display = helpVisible ? '' : 'none';
+}
+function resetAll() {
+  if (!confirm('确定恢复默认配置？所有加装的模块将被清除。')) return;
+  pinAssignments = JSON.parse(JSON.stringify(Object.fromEntries(
+    Object.entries(DEFAULT_PINS).map(([k,v]) => [parseInt(k), {...v}])
+  )));
+  currentModule = null;
+  renderAll();
+  toast('已恢复默认配置');
+}
+
+function exportConfig() {
+  const data = {
+    version: 1,
+    timestamp: new Date().toISOString(),
+    assignments: Object.fromEntries(
+      Object.entries(pinAssignments).filter(([_,a]) => !a.locked)
+    )
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `moji2-gpio-config-${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  toast('配置已导出');
+}
+function importConfig() {
+  const inp = document.createElement('input');
+  inp.type='file'; inp.accept='.json';
+  inp.onchange = e => {
+    const f = e.target.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = ev => {
+      try {
+        const d = JSON.parse(ev.target.result);
+        // 先重置非锁定引脚
+        const locked = {};
+        Object.entries(pinAssignments).forEach(([p,a]) => { if(a.locked) locked[p] = a; });
+        pinAssignments = locked;
+        Object.entries(d.assignments || {}).forEach(([p,a]) => {
+          pinAssignments[parseInt(p)] = a;
+        });
+        renderAll();
+        toast('配置已导入');
+      } catch { toast('文件格式错误', 'warn'); }
+    };
+    r.readAsText(f);
+  };
+  inp.click();
+}
+function copyCode() {
+  const code = document.getElementById('codeOutput').textContent;
+  navigator.clipboard?.writeText(code).then(() => toast('代码已复制到剪贴板'));
+}
+function downloadConfig() {
+  const code = document.getElementById('codeOutput').textContent;
+  const blob = new Blob([code], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'config_additions.h';
+  a.click(); URL.revokeObjectURL(url);
+  toast('config_additions.h 已下载');
+}
+
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.style.display = 'block';
+  el.style.background = type === 'warn' ? 'var(--warn)' : 'var(--accent)';
+  setTimeout(() => el.style.display = 'none', 2000);
+}
+
+// 初始化
+renderAll();
+</script>
+</body>
+</html>

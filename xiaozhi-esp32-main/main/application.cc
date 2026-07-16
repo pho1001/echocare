@@ -9,6 +9,7 @@
 #include "mcp_server.h"
 #include "assets.h"
 #include "settings.h"
+#include "settings_api.h"
 
 #include <cstring>
 #include <esp_log.h>
@@ -160,6 +161,9 @@ void Application::Initialize() {
 
     // Update the status bar immediately to show the network state
     display->UpdateStatusBar(true);
+
+    // 启动 HTTP 配置 API 服务（网页控制台通过它读写智能体配置）
+    SettingsApi::GetInstance().Start();
 }
 
 void Application::Run() {

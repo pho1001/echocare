@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moji 2.0 硬件改装 - 小白模式</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f0f14;--panel:#1a1a24;--border:#2a2a3a;--text:#e0e0e0;--accent:#6366f1;--accent2:#22c55e;--danger:#ef4444;--warn:#f59e0b;--card:#1e1e2e}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+.header{background:var(--panel);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:12px}
+.header h1{font-size:1.15rem;font-weight:600}
+.badge{font-size:0.65rem;padding:3px 8px;border-radius:10px;background:var(--accent);color:#fff}
+.container{max-width:960px;margin:0 auto;padding:20px}
+
+/* 问题区域 */
+.question-block{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
+.question-block h2{font-size:1rem;margin-bottom:4px}
+.question-block .subtitle{font-size:0.75rem;color:#888;margin-bottom:14px}
+
+/* 选项卡片 */
+.option-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.option-card{background:var(--card);border:2px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:all 0.15s;display:flex;gap:12px;align-items:flex-start}
+.option-card:hover{border-color:var(--accent);transform:translateY(-1px)}
+.option-card.selected{border-color:var(--accent2);background:#122016}
+.option-card .opt-icon{font-size:1.6rem;flex-shrink:0;width:36px;text-align:center}
+.option-card .opt-info{flex:1;min-width:0}
+.option-card .opt-name{font-weight:600;font-size:0.9rem}
+.option-card .opt-effect{font-size:0.7rem;color:#888;margin-top:3px;line-height:1.4}
+.option-card .opt-check{display:none;font-size:1.2rem;color:var(--accent2);flex-shrink:0}
+.option-card.selected .opt-check{display:block}
+.option-card .opt-price{font-size:0.65rem;color:var(--warn);margin-top:4px}
+.option-card .opt-diff{font-size:0.65rem;padding:2px 6px;border-radius:4px;background:#2a2a3a;display:inline-block;margin-top:4px}
+.option-card .opt-diff.easy{background:#0a2a0a;color:var(--accent2)}
+.option-card .opt-diff.medium{background:#2a2a00;color:var(--warn)}
+.option-card .opt-diff.hard{background:#2a0a0a;color:var(--danger)}
+
+/* 已选汇总 */
+.summary-panel{background:var(--panel);border:2px solid var(--accent2);border-radius:12px;padding:20px;margin-bottom:16px}
+.summary-panel h2{margin-bottom:12px;font-size:1rem}
+.summary-panel .empty{text-align:center;padding:16px;color:#666;font-size:0.8rem}
+
+.summary-item{display:flex;align-items:center;gap:12px;padding:10px;background:var(--card);border-radius:8px;margin-bottom:8px}
+.summary-item .s-icon{font-size:1.4rem}
+.summary-item .s-info{flex:1}
+.summary-item .s-name{font-weight:600;font-size:0.85rem}
+.summary-item .s-detail{font-size:0.7rem;color:#888}
+.summary-item .s-buy{font-size:0.7rem;color:var(--warn)}
+
+.need-list{font-size:0.8rem;line-height:1.8}
+.need-list li{margin-bottom:6px;list-style-position:inside}
+.need-list .buy{color:var(--warn);font-weight:600}
+
+.btn{background:var(--accent);color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:500}
+.btn:hover{opacity:0.9}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-outline:hover{border-color:var(--accent)}
+.btn-sm{padding:5px 12px;font-size:0.75rem}
+.btn-danger{background:var(--danger)}
+.btn-row{display:flex;gap:8px;margin-top:10px}
+
+/* 进度条 */
+.progress-bar{width:100%;height:6px;background:var(--bg);border-radius:3px;margin:16px 0;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent2);border-radius:3px;transition:width 0.3s}
+
+/* 弹窗 */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:100}
+.modal{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:500px;width:90%}
+.modal h3{margin-bottom:12px}
+.modal p{font-size:0.8rem;color:#888;margin-bottom:12px;line-height:1.5}
+.modal .btn-row{justify-content:flex-end}
+
+.toast-fixed{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;padding:10px 24px;border-radius:8px;font-size:0.8rem;z-index:200;animation:toastIn 0.2s;pointer-events:none}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+.muted{color:#888;font-size:0.75rem}
+a.back{color:var(--accent);text-decoration:none;font-size:0.85rem}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🤖 Moji 2.0 改装向导</h1>
+  <span class="badge">小白模式</span>
+  <div style="flex:1"></div>
+  <a class="back" href="gpio-configurator.html">切到高级模式</a>
+  <span style="color:#444">|</span>
+  <a class="back" href="index.html">回控制台</a>
+</div>
+
+<div class="container">
+  <!-- 引导语 -->
+  <div style="background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;text-align:center">
+    <p style="font-size:1.1rem;margin-bottom:6px">你想让你的小机器人<b>多会点什么</b>？</p>
+    <p class="muted">下面每道题选或不选都行，选中的就是要加的新功能</p>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <p style="font-size:0.7rem;color:#888">已选 <span id="pickedCount">0</span> 个改装项</p>
+  </div>
+
+  <!-- Q1: 它会动吗 -->
+  <div class="question-block">
+    <h2>🏃 第一题：你想让它会动吗？</h2>
+    <p class="subtitle">目前 Moji 2.0 是个静止的小摆件。想让它能摇头、点头、甚至走路？</p>
+    <div class="option-grid" id="q1"></div>
+  </div>
+
+  <!-- Q2: 它会发光吗 -->
+  <div class="question-block">
+    <h2>💡 第二题：你想让它有情绪灯光吗？</h2>
+    <p class="subtitle">根据对话内容，发出不同颜色的光——开心是暖黄色，难过是蓝色</p>
+    <div class="option-grid" id="q2"></div>
+  </div>
+
+  <!-- Q3: 它能感觉到你吗 -->
+  <div class="question-block">
+    <h2>🤚 第三题：你想让它感知到你吗？</h2>
+    <p class="subtitle">比如摸它就知道你在摸、拿起来它知道被拿起了、靠近时就主动打招呼</p>
+    <div class="option-grid" id="q3"></div>
+  </div>
+
+  <!-- Q4: 屏幕和声音 -->
+  <div class="question-block">
+    <h2>📺 第四题：想加屏幕或加强声音吗？</h2>
+    <p class="subtitle">现有声音不够大？想要第二块小屏显示额外信息？</p>
+    <div class="option-grid" id="q4"></div>
+  </div>
+
+  <!-- 汇总 -->
+  <div class="summary-panel" id="summaryPanel">
+    <h2>📦 你的改装方案</h2>
+    <div id="summaryContent"><div class="empty">👆 在上面勾选你想加的功能，这里会自动汇总</div></div>
+    <div id="summaryNeeds" style="display:none">
+      <h3 style="font-size:0.85rem;margin-top:12px;margin-bottom:8px">🛒 你需要买</h3>
+      <ul class="need-list" id="needList"></ul>
+    </div>
+    <div id="summaryGuide" style="display:none">
+      <h3 style="font-size:0.85rem;margin-top:12px;margin-bottom:8px">🔌 你需要焊（找修手机的朋友帮忙）</h3>
+      <ul class="need-list" id="guideList"></ul>
+    </div>
+    <div class="btn-row" id="summaryBtns" style="display:none">
+      <button class="btn" onclick="downloadSummary()">💾 下载方案发给工程师</button>
+      <button class="btn btn-outline" onclick="clearAll()">清空重选</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast-fixed" style="display:none"></div>
+
+<script>
+// ======================== 小白模式数据 ========================
+// 每种选项用通俗语言描述，隐藏所有技术名词
+
+const QUESTIONS = [
+  {
+    id:'motion', title:'运动能力',
+    options:[
+      {
+        id:'servo', icon:'🙋', name:'会点头 / 摇头',
+        effect:'它能上下点头表示同意，左右摇头表示不同意。<br>就像一个小人用肢体表达情绪。',
+        price:'约 ¥5', difficulty:'easy', diffLabel:'入门',
+        modId:'servo', bom:'微型舵机 (SG90)', pins:'1根线焊在电路板上', wiring:'舵机红线→5V, 棕线→GND, 橙线→找个空闲口接上'
+      },
+      {
+        id:'dcmotor', icon:'🏎️', name:'能走路 / 会移动',
+        effect:'装上两个小轮子，它能在地上跑来跑去。你叫它过来，它就过来。',
+        price:'约 ¥15', difficulty:'medium', diffLabel:'需动手',
+        modId:'dcmotor', bom:'微型减速电机 ×2 + 驱动板', pins:'焊4根线', wiring:'电机驱动需要额外供电，建议找懂焊接的人帮忙'
+      },
+      {
+        id:'stepper', icon:'🦾', name:'有个机械小手臂',
+        effect:'装上一个小机械臂/关节，能精确旋转。可以握手、递东西。',
+        price:'约 ¥10', difficulty:'hard', diffLabel:'较难',
+        modId:'stepper', bom:'步进电机 + 驱动板', pins:'焊5根线', wiring:'需要步进电机驱动板，接线相对复杂，建议找工程师'
+      }
+    ]
+  },
+  {
+    id:'light', title:'灯光效果',
+    options:[
+      {
+        id:'ledstrip', icon:'🌈', name:'彩色心情灯环',
+        effect:'周围一圈彩灯，开心时闪暖黄，难过时变蓝，生气时变红。<br>像一个小光环，把你的心情"翻译"成颜色。',
+        price:'约 ¥6', difficulty:'easy', diffLabel:'入门',
+        modId:'ledstrip', bom:'WS2812 RGB灯环', pins:'焊3根线', wiring:'灯环 VCC→3.3V, GND→GND, 数据线→找个空闲口'
+      }
+    ]
+  },
+  {
+    id:'sense', title:'感知能力',
+    options:[
+      {
+        id:'touch', icon:'👆', name:'摸它，它能感觉到',
+        effect:'在它头顶或身上装一个小触摸片。你摸它的时候，它会说"不要摸我啦~"或者发出开心的声音。',
+        price:'约 ¥1.5', difficulty:'easy', diffLabel:'入门',
+        modId:'touch', bom:'电容触摸模块 (TTP223)', pins:'焊3根线', wiring:'模块 VCC→3.3V, GND→GND, 输出线→空闲口'
+      },
+      {
+        id:'button_extra', icon:'🔘', name:'多加一个按钮',
+        effect:'现有只有一个按钮。加第二个后，可以一个用来唤醒，一个用来切换模式。',
+        price:'约 ¥1', difficulty:'easy', diffLabel:'入门',
+        modId:'button_extra', bom:'微动开关', pins:'焊2根线', wiring:'开关一端→空闲口, 另一端→GND'
+      },
+      {
+        id:'imu', icon:'🌀', name:'感知被"拿起来"了',
+        effect:'装一个小芯片，它能感知到有人拿起了它。拿起时它会说"咦，你把我拿起来啦？"',
+        price:'约 ¥5', difficulty:'medium', diffLabel:'需动手',
+        modId:'imu', bom:'姿态传感器 (MPU6050)', pins:'焊4根线', wiring:'模块 VCC→3.3V, GND→GND, 另外两根数据线焊到指定位置'
+      },
+      {
+        id:'dist', icon:'📏', name:'感知有人靠近',
+        effect:'能检测到前面有没有人。人靠近时它会主动打招呼"嗨~你来啦！"',
+        price:'约 ¥3', difficulty:'medium', diffLabel:'需动手',
+        modId:'dist', bom:'超声波测距模块 (HC-SR04)', pins:'焊4根线', wiring:'模块 VCC→5V, GND→GND, 两根信号线焊到两个空闲口'
+      }
+    ]
+  },
+  {
+    id:'display', title:'屏幕与声音',
+    options:[
+      {
+        id:'oled_ext', icon:'🖥️', name:'加第二块小屏幕',
+        effect:'在侧面加一块 0.91 寸小屏幕，可以显示时间、天气、或者你的头像。',
+        price:'约 ¥12', difficulty:'medium', diffLabel:'需动手',
+        modId:'oled_ext', bom:'0.91寸 OLED屏 (SSD1306)', pins:'焊4根线 (共用已有SDA/SCL)', wiring:'屏幕 VCC→3.3V, GND→GND, 两根数据线并到原线路'
+      },
+      {
+        id:'speaker_amp', icon:'🔊', name:'让声音更大更清晰',
+        effect:'对现有 Moji 2.0 来说，声音可能偏小。外接一个小功放板就能让声音洪亮很多。',
+        price:'约 ¥15', difficulty:'medium', diffLabel:'需动手',
+        modId:'speaker_amp', bom:'MAX98357 数字功放板 + 喇叭', pins:'焊几根线连到原音频口', wiring:'需要找到原 I2S 信号线飞线出来接功放'
+      }
+    ]
+  }
+];
+
+// 状态
+let picked = {}; // {modId: optionData}
+
+function renderAll() {
+  QUESTIONS.forEach(q => {
+    const grid = document.getElementById('q' + (QUESTIONS.indexOf(q)+1));
+    grid.innerHTML = q.options.map(o => {
+      const sel = picked[o.modId];
+      return `<div class="option-card ${sel ? 'selected' : ''}" onclick="togglePick('${o.modId}')" 
+        data-mod="${o.modId}">
+        <span class="opt-icon">${o.icon}</span>
+        <div class="opt-info">
+          <div class="opt-name">${o.name}</div>
+          <div class="opt-effect">${o.effect}</div>
+          <span class="opt-diff ${o.difficulty}">${o.diffLabel}</span>
+          <span class="opt-price">💰 ${o.price}</span>
+        </div>
+        <span class="opt-check">✅</span>
+      </div>`;
+    }).join('');
+  });
+  renderSummary();
+}
+
+function togglePick(modId) {
+  if (picked[modId]) {
+    delete picked[modId];
+  } else {
+    // 找到该选项数据
+    for (const q of QUESTIONS) {
+      const opt = q.options.find(o => o.modId === modId);
+      if (opt) { picked[modId] = opt; break; }
+    }
+  }
+  renderAll();
+}
+
+function clearAll() {
+  picked = {};
+  renderAll();
+  toast('已清空，重新选择吧');
+}
+
+function renderSummary() {
+  const keys = Object.keys(picked);
+  document.getElementById('pickedCount').textContent = keys.length;
+  document.getElementById('progressFill').style.width = Math.min(100, keys.length * 20) + '%';
+  
+  const content = document.getElementById('summaryContent');
+  const needs = document.getElementById('needList');
+  const guide = document.getElementById('guideList');
+  const needsDiv = document.getElementById('summaryNeeds');
+  const guideDiv = document.getElementById('summaryGuide');
+  const btns = document.getElementById('summaryBtns');
+
+  if (keys.length === 0) {
+    content.innerHTML = '<div class="empty">👆 在上面勾选你想加的功能，这里会自动汇总</div>';
+    needsDiv.style.display = 'none';
+    guideDiv.style.display = 'none';
+    btns.style.display = 'none';
+    return;
+  }
+
+  content.innerHTML = keys.map(k => {
+    const o = picked[k];
+    return `<div class="summary-item">
+      <span class="s-icon">${o.icon}</span>
+      <div class="s-info">
+        <div class="s-name">${o.name}</div>
+        <div class="s-detail">${o.bom}</div>
+      </div>
+      <span class="s-buy">${o.price}</span>
+    </div>`;
+  }).join('');
+
+  needsDiv.style.display = '';
+  guideDiv.style.display = '';
+  btns.style.display = '';
+
+  // 去重 BOM
+  const boms = [...new Set(keys.map(k => picked[k].bom))];
+  needs.innerHTML = boms.map(b => `<li>购买 <span class="buy">${b}</span></li>`).join('');
+
+  guide.innerHTML = keys.map(k => {
+    const o = picked[k];
+    return `<li><b>${o.name}</b>：${o.wiring}</li>`;
+  }).join('');
+
+  guide.innerHTML += '<li style="color:var(--accent)">💡 <b>重要提示：</b>如果你不会焊接，把上面这些零件和方案发给修手机店或电子市场，他们能帮你焊好</li>';
+}
+
+function downloadSummary() {
+  const keys = Object.keys(picked);
+  if (!keys.length) return;
+  let text = '=== Moji 2.0 改装方案 ===\n\n';
+  text += `生成时间: ${new Date().toLocaleString()}\n\n`;
+  text += '【要加的改功能】\n';
+  keys.forEach(k => {
+    const o = picked[k];
+    text += `\n${o.icon} ${o.name}\n  效果: ${o.effect.replace(/<br>/g,' / ')}\n  物料: ${o.bom} (${o.price})\n  接线: ${o.wiring}\n`;
+  });
+  text += '\n【购买清单】\n';
+  [...new Set(keys.map(k => picked[k].bom))].forEach(b => text += `- ${b}\n`);
+  const blob = new Blob([text], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `moji2-改装方案-${new Date().toISOString().slice(0,10)}.txt`;
+  a.click(); URL.revokeObjectURL(url);
+  toast('方案已下载');
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 2000);
+}
+
+renderAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>面包板 ESP32-S3 语音助手 — 购买清单</title>
+<style>
+body { font-family: "Microsoft YaHei", sans-serif; max-width: 700px; margin: 0 auto; padding: 20px; line-height: 1.8; color: #222; }
+h1 { text-align: center; font-size: 1.5em; border-bottom: 2px solid #333; padding-bottom: 10px; }
+h2 { font-size: 1.2em; margin-top: 30px; border-left: 4px solid #6366f1; padding-left: 10px; }
+table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.9em; }
+th { background: #f0f0f0; padding: 8px 10px; text-align: left; }
+td { border-bottom: 1px solid #ddd; padding: 8px 10px; vertical-align: top; }
+.price { white-space: nowrap; color: #e65100; font-weight: bold; }
+.note { background: #fffde7; border: 1px solid #ffe082; padding: 12px 16px; margin: 14px 0; border-radius: 4px; font-size: 0.9em; }
+.highlight { background: #e8f5e9; padding: 2px 6px; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<h1>🛒 面包板 ESP32-S3 语音助手 — 购买清单</h1>
+<p style="text-align:center;color:#888">全部模块化元件，杜邦线插拔，<strong>零焊接</strong> · 总预算约 ¥87</p>
+
+<h2>必买项（缺一个跑不起来）</h2>
+<table>
+<tr><th style="width:60px">序号</th><th>名称</th><th style="width:70px">约价</th><th>淘宝搜索关键词</th><th>备注</th></tr>
+<tr>
+  <td>1</td>
+  <td><strong>ESP32-S3 开发板</strong></td>
+  <td class="price">¥35</td>
+  <td>ESP32-S3 N16R8 开发板</td>
+  <td>选带 <b>USB Type-C</b> 口的，选 <b>N16R8</b>（16MB Flash + 8MB PSRAM）。推荐 NodeMCU-S3 或合宙 ESP32-S3</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><strong>INMP441 数字麦克风模块</strong></td>
+  <td class="price">¥5</td>
+  <td>INMP441 麦克风模块 I2S</td>
+  <td>全向数字硅麦，I2S 接口。已经焊好在小板子上的，直接用杜邦线接</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><strong>MAX98357 I2S 功放模块</strong></td>
+  <td class="price">¥8</td>
+  <td>MAX98357 数字功放板 I2S</td>
+  <td>3W 输出。已经焊好在小板子上的，配一个 2P 喇叭插座</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><strong>3W 小喇叭</strong></td>
+  <td class="price">¥3</td>
+  <td>3W 4Ω 喇叭</td>
+  <td>选带 2P JST 插头的（直接插功放模块），选直径 28mm 或 20mm 都可以</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><strong>0.96 寸 OLED 屏幕</strong></td>
+  <td class="price">¥12</td>
+  <td>0.96寸 OLED 模块 SSD1306 I2C 蓝</td>
+  <td>必须选 <b>4 脚 I2C 接口</b>（VCC/GND/SCL/SDA），不要 SPI 7 脚的</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><strong>面包板</strong></td>
+  <td class="price">¥8</td>
+  <td>830 孔面包板</td>
+  <td>选 830 孔的（16.5×5.5cm），太小摆不开</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><strong>杜邦线套装</strong></td>
+  <td class="price">¥5</td>
+  <td>公母杜邦线 40P + 公公 20P</td>
+  <td><b>公母各一捆</b>，公对母用来连开发板到面包板，公对公连模块之间</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><strong>USB 数据线</strong></td>
+  <td class="price">¥5</td>
+  <td>Type-C 数据线</td>
+  <td><b>必须是数据线</b>（能传数据的），不能是纯充电线</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><strong>微动按键 ×2</strong></td>
+  <td class="price">¥2</td>
+  <td>6×6 微动按键 插件 4脚</td>
+  <td>两个。一个当 BOOT 唤醒，一个当模式切换。也可以用 4 脚面包板按键模块</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><strong>10KΩ 电阻 ×2</strong></td>
+  <td class="price">¥1</td>
+  <td>1/4W 10KΩ 插件电阻</td>
+  <td>两个，给按键做上拉用</td>
+</tr>
+</table>
+
+<div class="note"><strong>合计必买：约 ¥84</strong></div>
+
+<h2>建议加购（非必须但好用）</h2>
+<table>
+<tr><th>序号</th><th>名称</th><th>约价</th><th>说明</th></tr>
+<tr>
+  <td>11</td>
+  <td>10×10cm 洞洞板 + 排针</td>
+  <td class="price">¥5</td>
+  <td>面包板做完验证后，把线焊到洞洞板上就变成永久版了</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>WS2812B 8 灯环</td>
+  <td class="price">¥6</td>
+  <td>插上就成的 RGB 心情灯环，3 根线</td>
+</tr>
+</table>
+
+<hr>
+
+<h2>完整接线表（照着插）</h2>
+<table>
+<tr><th>线#</th><th>从（模块）</th><th>到（ESP32-S3 引脚）</th><th>颜色建议</th></tr>
+<tr><td colspan="4" style="background:#e3f2fd;text-align:center"><b>电源线（所有模块共用）</b></td></tr>
+<tr><td>1</td><td>面包板 VCC 排</td><td>ESP32 3.3V</td><td>🔴 红</td></tr>
+<tr><td>2</td><td>面包板 GND 排</td><td>ESP32 GND</td><td>⚫ 黑</td></tr>
+<tr><td colspan="4" style="background:#e3f2fd;text-align:center"><b>INMP441 麦克风（I2S）</b></td></tr>
+<tr><td>3</td><td>麦克风 VDD</td><td>面包板 VCC</td><td>🔴 红</td></tr>
+<tr><td>4</td><td>麦克风 GND</td><td>面包板 GND</td><td>⚫ 黑</td></tr>
+<tr><td>5</td><td>麦克风 SD（DOUT）</td><td>GPIO 4</td><td>🟡 黄</td></tr>
+<tr><td>6</td><td>麦克风 SCK（BCLK）</td><td>GPIO 6</td><td>🟢 绿</td></tr>
+<tr><td>7</td><td>麦克风 WS（LRC）</td><td>GPIO 5</td><td>🟠 橙</td></tr>
+<tr><td>8</td><td>麦克风 L/R</td><td>面包板 GND</td><td>⚫ 黑（下拉=左声道）</td></tr>
+<tr><td colspan="4" style="background:#e3f2fd;text-align:center"><b>MAX98357 功放（I2S + 喇叭）</b></td></tr>
+<tr><td>9</td><td>功放 VIN</td><td>面包板 VCC</td><td>🔴 红</td></tr>
+<tr><td>10</td><td>功放 GND</td><td>面包板 GND</td><td>⚫ 黑</td></tr>
+<tr><td>11</td><td>功放 DIN</td><td>GPIO 7</td><td>🔵 蓝</td></tr>
+<tr><td>12</td><td>功放 BCLK</td><td>GPIO 6</td><td>🟢 绿（与麦克风共用 BCLK）</td></tr>
+<tr><td>13</td><td>功放 LRC（WS）</td><td>GPIO 5</td><td>🟠 橙（与麦克风共用 WS）</td></tr>
+<tr><td>—</td><td>喇叭插头</td><td>功放 2P 插座</td><td>直接插入</td></tr>
+<tr><td colspan="4" style="background:#e3f2fd;text-align:center"><b>OLED 屏幕（I2C）</b></td></tr>
+<tr><td>14</td><td>屏幕 VCC</td><td>面包板 VCC</td><td>🔴 红</td></tr>
+<tr><td>15</td><td>屏幕 GND</td><td>面包板 GND</td><td>⚫ 黑</td></tr>
+<tr><td>16</td><td>屏幕 SDA</td><td>GPIO 41</td><td>🟣 紫</td></tr>
+<tr><td>17</td><td>屏幕 SCL</td><td>GPIO 42</td><td>⚪ 灰</td></tr>
+<tr><td colspan="4" style="background:#e3f2fd;text-align:center"><b>按键</b></td></tr>
+<tr><td>18</td><td>按键1 一脚</td><td>GPIO 0</td><td></td></tr>
+<tr><td>19</td><td>按键1 另一脚</td><td>面包板 GND</td><td></td></tr>
+<tr><td>20</td><td>按键2 一脚</td><td>GPIO 1</td><td></td></tr>
+<tr><td>21</td><td>按键2 另一脚</td><td>面包板 GND</td><td></td></tr>
+</table>
+
+<hr>
+
+<h2>烧录步骤（一句话版）</h2>
+
+<ol>
+  <li>装 <strong>ESP-IDF v5.4+</strong> 开发环境</li>
+  <li><code>idf.py set-target esp32s3</code></li>
+  <li><code>idf.py menuconfig</code> → 选 <b>Bread Compact WiFi (面包板)</b> → 保存退出</li>
+  <li><code>idf.py build</code>（约 5 分钟）</li>
+  <li>按住 <b>BOOT 键</b>不松手，插入 USB，等 2 秒松手</li>
+  <li><code>idf.py flash</code></li>
+  <li>烧完后打开串口监视器：<code>idf.py monitor</code></li>
+  <li>手机会搜到 <b>"xiaozhi-xxxx"</b> 的 Wi-Fi 热点，连上 → 输你家 Wi-Fi 密码 → 完成</li>
+</ol>
+
+<div class="note">
+  <strong>⚡ 免编译捷径：</strong>小智官方 GitHub Releases 页面有预编译的 <code>.bin</code> 固件包（面包板专用），下载后用乐鑫官方烧录工具 <a href="https://www.espressif.com/zh-hans/support/download/other-tools">ESP Flash Download Tool</a> 烧进去，跳过安装 ESP-IDF。
+</div>
+
+<hr>
+
+<h2>实物效果</h2>
+<p>接好后大概长这样：面包板中间插 ESP32-S3 开发板，周边散落麦克风模块、功放模块、OLED 屏、两个按键。全部用彩色杜邦线连接，像一团彩色意大利面，但能用。</p>
+
+<p>通电后屏幕会显示"小智 AI"启动画面，连上 Wi-Fi 后说 <b>"hi echo"</b> 就能唤醒对话。</p>
+<hr>
+
+<p style="text-align:center;color:#999;font-size:0.8em">2026-07-02 · 面包板 ESP32-S3 语音助手 v1.0</p>
+</body>
+</html>
