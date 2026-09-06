@@ -614,6 +614,7 @@ void Application::InitializeProtocol() {
 }
 
 void Application::ShowActivationCode(const std::string& code, const std::string& message) {
+    ESP_LOGW(TAG, "===== ACTIVATION CODE: %s =====", code.c_str());
     struct digit_sound {
         char digit;
         const std::string_view& sound;
